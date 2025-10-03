@@ -1,155 +1,423 @@
-DROP DATABASE IF EXISTS LMS;
--- =========================
--- Database Creation
--- =========================
-CREATE DATABASE IF NOT EXISTS LMS;
-USE LMS;
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Oct 03, 2025 at 05:15 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
--- =========================
--- UserRole Table
--- =========================
-CREATE TABLE IF NOT EXISTS UserRole (
-    RoleID INT AUTO_INCREMENT PRIMARY KEY,
-    RoleName VARCHAR(50) NOT NULL UNIQUE,
-    Description TEXT
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Insert Default Roles (safe to re-run)
-INSERT IGNORE INTO UserRole (RoleName, Description) VALUES
-('admin', 'System Administrator'),
-('lecturer', 'Lecturer / Teacher'),
-('student', 'Registered Student');
 
--- =========================
--- UserAccount Table (Authentication)
--- =========================
-CREATE TABLE IF NOT EXISTS UserAccount (
-    UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Email VARCHAR(100) NOT NULL UNIQUE,
-    Password VARCHAR(255) NOT NULL,
-    RoleID INT NOT NULL,
-    FOREIGN KEY (RoleID) REFERENCES UserRole(RoleID)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- =========================
--- Admin Profile Table
--- =========================
-CREATE TABLE IF NOT EXISTS Admin (
-    AdminID INT AUTO_INCREMENT PRIMARY KEY,
-    UserID INT NOT NULL UNIQUE,
-    Name VARCHAR(100) NOT NULL,
-    FOREIGN KEY (UserID) REFERENCES UserAccount(UserID)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
+--
+-- Database: `lms`
+--
 
--- Insert first admin user (only if not exists)
-INSERT INTO UserAccount (Email, Password, RoleID)
-SELECT 'admin@example.com',
-       '$2y$10$gRjS3MMyw9d7pR8Y9XbKfeI6Po1EmZwbMblH5ScB3VwxCBo4nDqL2',
-       ur.RoleID
-FROM UserRole ur
-WHERE ur.RoleName = 'admin'
-  AND NOT EXISTS (SELECT 1 FROM UserAccount ua WHERE ua.Email = 'admin@example.com');
+-- --------------------------------------------------------
 
--- Insert matching Admin profile (only if not exists)
-INSERT INTO Admin (UserID, Name)
-SELECT ua.UserID, 'Super Admin'
-FROM UserAccount ua
-WHERE ua.Email = 'admin@example.com'
-  AND NOT EXISTS (SELECT 1 FROM Admin a WHERE a.UserID = ua.UserID);
+--
+-- Table structure for table `admin`
+--
 
--- =========================
--- Batch Table
--- =========================
-CREATE TABLE IF NOT EXISTS Batch (
-    BatchID INT AUTO_INCREMENT PRIMARY KEY,
-    BatchName VARCHAR(100) NOT NULL,
-    Description TEXT
-);
+CREATE TABLE `admin` (
+  `AdminID` int(11) NOT NULL,
+  `UserID` int(11) NOT NULL,
+  `Name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- =========================
--- Student Profile Table
--- =========================
-CREATE TABLE IF NOT EXISTS Student (
-    StudentID INT AUTO_INCREMENT PRIMARY KEY,
-    UserID INT NOT NULL UNIQUE,
-    Name VARCHAR(100) NOT NULL,
-    NIC VARCHAR(20) UNIQUE NOT NULL,
-    BatchID INT,
-    FOREIGN KEY (UserID) REFERENCES UserAccount(UserID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (BatchID) REFERENCES Batch(BatchID)
-        ON DELETE SET NULL ON UPDATE CASCADE
-);
+--
+-- Dumping data for table `admin`
+--
 
--- =========================
--- Lecturer Profile Table
--- =========================
-CREATE TABLE IF NOT EXISTS Lecturer (
-    LecturerID INT AUTO_INCREMENT PRIMARY KEY,
-    UserID INT NOT NULL UNIQUE,
-    Name VARCHAR(100) NOT NULL,
-    NIC VARCHAR(20) UNIQUE NOT NULL,
-    FOREIGN KEY (UserID) REFERENCES UserAccount(UserID)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
+INSERT INTO `admin` (`AdminID`, `UserID`, `Name`) VALUES
+(1, 1, 'Super Admin');
 
--- =========================
--- Course Table
--- =========================
-CREATE TABLE IF NOT EXISTS Course (
-    CourseID INT AUTO_INCREMENT PRIMARY KEY,
-    CourseName VARCHAR(100) NOT NULL,
-    BatchID INT,
-    LecturerID INT,
-    FOREIGN KEY (BatchID) REFERENCES Batch(BatchID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID)
-        ON DELETE SET NULL ON UPDATE CASCADE
-);
+-- --------------------------------------------------------
 
--- =========================
--- Enrollment Table (M:N for Student ↔ Course)
--- =========================
-CREATE TABLE IF NOT EXISTS Enrollment (
-    EnrollmentID INT AUTO_INCREMENT PRIMARY KEY,
-    StudentID INT,
-    CourseID INT,
-    FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (CourseID) REFERENCES Course(CourseID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE(StudentID, CourseID)
-);
+--
+-- Table structure for table `announcement`
+--
 
--- =========================
--- Announcement Table
--- =========================
-CREATE TABLE IF NOT EXISTS Announcement (
-    AnnouncementID INT AUTO_INCREMENT PRIMARY KEY,
-    Title VARCHAR(255) NOT NULL,
-    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CourseID INT,
-    LecturerID INT,
-    FOREIGN KEY (CourseID) REFERENCES Course(CourseID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
+CREATE TABLE `announcement` (
+  `AnnouncementID` int(11) NOT NULL,
+  `Title` varchar(255) NOT NULL,
+  `Date` datetime DEFAULT current_timestamp(),
+  `CourseID` int(11) DEFAULT NULL,
+  `LecturerID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- =========================
--- LectureMaterial Table
--- =========================
-CREATE TABLE IF NOT EXISTS LectureMaterial (
-    MaterialID INT AUTO_INCREMENT PRIMARY KEY,
-    FileName VARCHAR(255) NOT NULL,
-    FileType ENUM('PPT','PDF','WORD') NOT NULL,
-    UploadDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CourseID INT,
-    LecturerID INT,
-    FOREIGN KEY (CourseID) REFERENCES Course(CourseID)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `batch`
+--
+
+CREATE TABLE `batch` (
+  `BatchID` int(11) NOT NULL,
+  `BatchName` varchar(100) NOT NULL,
+  `BatchYear` int(4) NOT NULL DEFAULT 2024,
+  `BatchType` enum('full time','part time') NOT NULL DEFAULT 'full time',
+  `BatchCode` varchar(6) NOT NULL DEFAULT '',
+  `Description` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `batch`
+--
+
+INSERT INTO `batch` (`BatchID`, `BatchName`, `BatchYear`, `BatchType`, `BatchCode`, `Description`) VALUES
+(1, 'ITB', 2022, 'part time', 'ITB22P', 'test');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course`
+--
+
+CREATE TABLE `course` (
+  `CourseID` int(11) NOT NULL,
+  `CourseName` varchar(100) NOT NULL,
+  `BatchID` int(11) DEFAULT NULL,
+  `LecturerID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `course`
+--
+
+INSERT INTO `course` (`CourseID`, `CourseName`, `BatchID`, `LecturerID`) VALUES
+(1, 'computer simulation', 1, 1),
+(2, 'CSS', 1, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `enrollment`
+--
+
+CREATE TABLE `enrollment` (
+  `EnrollmentID` int(11) NOT NULL,
+  `StudentID` int(11) DEFAULT NULL,
+  `CourseID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lecturematerial`
+--
+
+CREATE TABLE `lecturematerial` (
+  `MaterialID` int(11) NOT NULL,
+  `FileName` varchar(255) NOT NULL,
+  `FileType` enum('PPT','PDF','WORD') NOT NULL,
+  `UploadDate` datetime DEFAULT current_timestamp(),
+  `CourseID` int(11) DEFAULT NULL,
+  `LecturerID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lecturer`
+--
+
+CREATE TABLE `lecturer` (
+  `LecturerID` int(11) NOT NULL,
+  `UserID` int(11) NOT NULL,
+  `Name` varchar(100) NOT NULL,
+  `NIC` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `lecturer`
+--
+
+INSERT INTO `lecturer` (`LecturerID`, `UserID`, `Name`, `NIC`) VALUES
+(1, 4, 'Prabathi Priyanthika', '902552728V'),
+(2, 6, 'nasi', '902752728V');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student`
+--
+
+CREATE TABLE `student` (
+  `StudentID` int(11) NOT NULL,
+  `UserID` int(11) NOT NULL,
+  `Name` varchar(100) NOT NULL,
+  `NIC` varchar(20) NOT NULL,
+  `BatchID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student`
+--
+
+INSERT INTO `student` (`StudentID`, `UserID`, `Name`, `NIC`, `BatchID`) VALUES
+(1, 2, 'geeth salindra', '992662425V', 1),
+(2, 3, 'saliya indrasiri', '982662425V', 1),
+(3, 5, 'lakindu', '992332425V', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `useraccount`
+--
+
+CREATE TABLE `useraccount` (
+  `UserID` int(11) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `RoleID` int(11) NOT NULL,
+  `first_login` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Flag to indicate if user has logged in before (1 = first login, 0 = subsequent logins)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `useraccount`
+--
+
+INSERT INTO `useraccount` (`UserID`, `Email`, `Password`, `RoleID`, `first_login`) VALUES
+(1, 'admin@example.com', '$2y$10$drpvJ81Ll5k/2wa/ywRb5.l6u19T8sHMfss2wyOyMtCnCDBq/wbqu', 1, 0),
+(2, 'geeth@example.com', '$2y$10$/L9NJa6MA7cNvrgYl4noI.VZJcewW/DJJ6Ztc3qucgdVdTDxwXRpm', 3, 1),
+(3, 'saliya@example.com', '$2y$10$/L9NJa6MA7cNvrgYl4noI.VZJcewW/DJJ6Ztc3qucgdVdTDxwXRpm', 3, 1),
+(4, 'prabathi@gmail.com', '$2y$10$/L9NJa6MA7cNvrgYl4noI.VZJcewW/DJJ6Ztc3qucgdVdTDxwXRpm', 2, 1),
+(5, 'lakindu@example.com', '$2y$10$KRCee7sv5t4mOjYFhJOOUeFfpt3jtBn7aKCN2589IN66HGwEi6HN6', 3, 1),
+(6, 'nasi@gmail.com', '$2y$10$siPj4fgcDxA3Sik9/wDtNusSF58LVr/1FGifYPDT3i93PW6INHCxe', 2, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `userrole`
+--
+
+CREATE TABLE `userrole` (
+  `RoleID` int(11) NOT NULL,
+  `RoleName` varchar(50) NOT NULL,
+  `Description` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `userrole`
+--
+
+INSERT INTO `userrole` (`RoleID`, `RoleName`, `Description`) VALUES
+(1, 'admin', 'System Administrator'),
+(2, 'lecturer', 'Lecturer / Teacher'),
+(3, 'student', 'Registered Student');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`AdminID`),
+  ADD UNIQUE KEY `UserID` (`UserID`);
+
+--
+-- Indexes for table `announcement`
+--
+ALTER TABLE `announcement`
+  ADD PRIMARY KEY (`AnnouncementID`),
+  ADD KEY `CourseID` (`CourseID`),
+  ADD KEY `LecturerID` (`LecturerID`);
+
+--
+-- Indexes for table `batch`
+--
+ALTER TABLE `batch`
+  ADD PRIMARY KEY (`BatchID`);
+
+--
+-- Indexes for table `course`
+--
+ALTER TABLE `course`
+  ADD PRIMARY KEY (`CourseID`),
+  ADD KEY `BatchID` (`BatchID`),
+  ADD KEY `LecturerID` (`LecturerID`);
+
+--
+-- Indexes for table `enrollment`
+--
+ALTER TABLE `enrollment`
+  ADD PRIMARY KEY (`EnrollmentID`),
+  ADD UNIQUE KEY `StudentID` (`StudentID`,`CourseID`),
+  ADD KEY `CourseID` (`CourseID`);
+
+--
+-- Indexes for table `lecturematerial`
+--
+ALTER TABLE `lecturematerial`
+  ADD PRIMARY KEY (`MaterialID`),
+  ADD KEY `CourseID` (`CourseID`),
+  ADD KEY `LecturerID` (`LecturerID`);
+
+--
+-- Indexes for table `lecturer`
+--
+ALTER TABLE `lecturer`
+  ADD PRIMARY KEY (`LecturerID`),
+  ADD UNIQUE KEY `UserID` (`UserID`),
+  ADD UNIQUE KEY `NIC` (`NIC`);
+
+--
+-- Indexes for table `student`
+--
+ALTER TABLE `student`
+  ADD PRIMARY KEY (`StudentID`),
+  ADD UNIQUE KEY `UserID` (`UserID`),
+  ADD UNIQUE KEY `NIC` (`NIC`),
+  ADD KEY `BatchID` (`BatchID`);
+
+--
+-- Indexes for table `useraccount`
+--
+ALTER TABLE `useraccount`
+  ADD PRIMARY KEY (`UserID`),
+  ADD UNIQUE KEY `Email` (`Email`),
+  ADD KEY `RoleID` (`RoleID`);
+
+--
+-- Indexes for table `userrole`
+--
+ALTER TABLE `userrole`
+  ADD PRIMARY KEY (`RoleID`),
+  ADD UNIQUE KEY `RoleName` (`RoleName`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `AdminID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `announcement`
+--
+ALTER TABLE `announcement`
+  MODIFY `AnnouncementID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `batch`
+--
+ALTER TABLE `batch`
+  MODIFY `BatchID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `course`
+--
+ALTER TABLE `course`
+  MODIFY `CourseID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `enrollment`
+--
+ALTER TABLE `enrollment`
+  MODIFY `EnrollmentID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lecturematerial`
+--
+ALTER TABLE `lecturematerial`
+  MODIFY `MaterialID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `lecturer`
+--
+ALTER TABLE `lecturer`
+  MODIFY `LecturerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `student`
+--
+ALTER TABLE `student`
+  MODIFY `StudentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `useraccount`
+--
+ALTER TABLE `useraccount`
+  MODIFY `UserID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `userrole`
+--
+ALTER TABLE `userrole`
+  MODIFY `RoleID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `admin`
+--
+ALTER TABLE `admin`
+  ADD CONSTRAINT `admin_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `useraccount` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `announcement`
+--
+ALTER TABLE `announcement`
+  ADD CONSTRAINT `announcement_ibfk_1` FOREIGN KEY (`CourseID`) REFERENCES `course` (`CourseID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `announcement_ibfk_2` FOREIGN KEY (`LecturerID`) REFERENCES `lecturer` (`LecturerID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `course`
+--
+ALTER TABLE `course`
+  ADD CONSTRAINT `course_ibfk_1` FOREIGN KEY (`BatchID`) REFERENCES `batch` (`BatchID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_ibfk_2` FOREIGN KEY (`LecturerID`) REFERENCES `lecturer` (`LecturerID`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `enrollment`
+--
+ALTER TABLE `enrollment`
+  ADD CONSTRAINT `enrollment_ibfk_1` FOREIGN KEY (`StudentID`) REFERENCES `student` (`StudentID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `enrollment_ibfk_2` FOREIGN KEY (`CourseID`) REFERENCES `course` (`CourseID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `lecturematerial`
+--
+ALTER TABLE `lecturematerial`
+  ADD CONSTRAINT `lecturematerial_ibfk_1` FOREIGN KEY (`CourseID`) REFERENCES `course` (`CourseID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `lecturematerial_ibfk_2` FOREIGN KEY (`LecturerID`) REFERENCES `lecturer` (`LecturerID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `lecturer`
+--
+ALTER TABLE `lecturer`
+  ADD CONSTRAINT `lecturer_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `useraccount` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `student`
+--
+ALTER TABLE `student`
+  ADD CONSTRAINT `student_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `useraccount` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `student_ibfk_2` FOREIGN KEY (`BatchID`) REFERENCES `batch` (`BatchID`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `useraccount`
+--
+ALTER TABLE `useraccount`
+  ADD CONSTRAINT `useraccount_ibfk_1` FOREIGN KEY (`RoleID`) REFERENCES `userrole` (`RoleID`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
