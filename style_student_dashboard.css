@@ -1,0 +1,153 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #002147;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+main {
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.dashboard-section {
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+}
+
+.hidden {
+  display: none;
+}
+
+/* 🎓 My Courses Cards */
+.course-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.course-card {
+  background: #3498db;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 250px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+.course-card h3 {
+  margin: 10px 0;
+  font-size: 1.3rem;
+}
+
+.course-card p {
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+}
+
+.btn-view {
+  display: inline-block;
+  background: white;
+  color: #3498db;
+  font-weight: bold;
+  padding: 8px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.btn-view:hover {
+  background: #2980b9;
+  color: white;
+}
+
+/* 📅 Calendar Styling */
+.calendar {
+  overflow-x: auto;
+}
+
+.calendar table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.1rem;
+}
+
+.calendar th, .calendar td {
+  border: 1px solid #ddd;
+  padding: 15px;
+  text-align: center;
+  width: 14.28%;
+}
+
+.calendar th {
+  background: #002147;
+  color: white;
+  font-weight: bold;
+}
+/* 📢 Announcement Badges */
+.announcement-list {
+  list-style: none;
+  padding: 0;
+}
+.announcement-item {
+  background: #f9f9f9;
+  margin: 8px 0;
+  padding: 10px;
+  border-left: 5px solid #3498db;
+  border-radius: 6px;
+}
+.badge-course, .badge-batch, .badge-lecturer {
+  display: inline-block;
+  background: #3498db;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  margin-right: 6px;
+}
+.badge-batch { background: #16a085; }
+.badge-lecturer { background: #8e44ad; }
+.announcement-text {
+  margin-top: 5px;
+}
